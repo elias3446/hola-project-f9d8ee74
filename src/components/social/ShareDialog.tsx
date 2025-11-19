@@ -29,6 +29,8 @@ import {
   Repeat2,
   Clock,
 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -79,6 +81,9 @@ export const ShareDialog = ({
   const [reposting, setReposting] = useState(false);
   const [sharingAsStatus, setSharingAsStatus] = useState(false);
   const [repostComment, setRepostComment] = useState("");
+  const [statusVisibilidad, setStatusVisibilidad] = useState<'todos' | 'contactos' | 'privado'>('todos');
+  const [compartirEnMensajes, setCompartirEnMensajes] = useState(false);
+  const [compartirEnSocial, setCompartirEnSocial] = useState(true);
 
   const postUrl = `${window.location.origin}/red-social#post-${postId}`;
   const shareText = postContent.length > 100 
@@ -295,11 +300,26 @@ export const ShareDialog = ({
   };
 
   const handleShareAsStatus = async () => {
-    if (!profile?.id || !onShareAsStatus) return;
+    if (!profile?.id) return;
 
     try {
       setSharingAsStatus(true);
-      await onShareAsStatus();
+      
+      // Crear el estado con el contenido de la publicación y las opciones seleccionadas
+      const { error } = await supabase
+        .from("estados")
+        .insert({
+          user_id: profile.id,
+          contenido: `📤 Publicación compartida:\n\n${postContent}`,
+          imagenes: postImages || [],
+          tipo: postImages && postImages.length > 0 ? 'imagen' : 'texto',
+          compartido_en_mensajes: compartirEnMensajes,
+          compartido_en_social: compartirEnSocial,
+          visibilidad: statusVisibilidad,
+        });
+
+      if (error) throw error;
+
       toast.success("Publicación compartida como estado");
       await registerShare("estado");
       onOpenChange(false);
@@ -404,19 +424,44 @@ export const ShareDialog = ({
 
             <TabsContent value="status" className="space-y-4 mt-4">
               <div className="space-y-4">
-                <div className="text-sm text-muted-foreground">
-                  Compartir esta publicación como un estado que durará 24 horas
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  Esta publicación se compartirá como un estado temporal (24 horas)
+                </p>
 
-                {/* Preview of what will be shared */}
-                <div className="border border-border rounded-lg p-4 bg-muted/30 space-y-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Estado (24 horas)</span>
+                {/* Preview of post as status */}
+                <div className="border border-border rounded-lg p-3 bg-muted/30">
+                  <div className="flex gap-2 items-center mb-2 text-xs text-muted-foreground">
+                    <Clock className="h-4 w-4" />
+                    <span>Vista previa del estado</span>
                   </div>
                   
+                  {postAuthor && (
+                    <div className="flex gap-3 mb-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={postAuthor.avatar || undefined} />
+                        <AvatarFallback>
+                          {postAuthor.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm">{postAuthor.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          @{postAuthor.username}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {postContent && (
+                    <p className="text-sm whitespace-pre-wrap line-clamp-3 mb-3">{postContent}</p>
+                  )}
+                  
                   {postImages && postImages.length > 0 && (
-                    <div className="w-full h-48 rounded-lg overflow-hidden">
+                    <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
                       <img 
                         src={postImages[0]} 
                         alt="Preview" 
@@ -424,16 +469,59 @@ export const ShareDialog = ({
                       />
                     </div>
                   )}
-                  
-                  {postContent && (
-                    <p className="text-sm line-clamp-3">{postContent}</p>
-                  )}
-                  
-                  {postAuthor && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>Publicación original de @{postAuthor.username}</span>
+                </div>
+
+                {/* Visibilidad */}
+                <div className="space-y-2">
+                  <Label>Visibilidad</Label>
+                  <RadioGroup
+                    value={statusVisibilidad}
+                    onValueChange={(value) => setStatusVisibilidad(value as 'todos' | 'contactos' | 'privado')}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="todos" id="todos" />
+                      <Label htmlFor="todos" className="font-normal cursor-pointer">
+                        Todos
+                      </Label>
                     </div>
-                  )}
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="contactos" id="contactos" />
+                      <Label htmlFor="contactos" className="font-normal cursor-pointer">
+                        Mis contactos
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="privado" id="privado" />
+                      <Label htmlFor="privado" className="font-normal cursor-pointer">
+                        Privado (solo yo)
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Opciones de compartir */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="compartir-mensajes" className="font-normal">
+                      Compartir también en Mensajes
+                    </Label>
+                    <Switch
+                      id="compartir-mensajes"
+                      checked={compartirEnMensajes}
+                      onCheckedChange={setCompartirEnMensajes}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="compartir-social" className="font-normal">
+                      Compartir también en Red Social
+                    </Label>
+                    <Switch
+                      id="compartir-social"
+                      checked={compartirEnSocial}
+                      onCheckedChange={setCompartirEnSocial}
+                    />
+                  </div>
                 </div>
 
                 <Button
