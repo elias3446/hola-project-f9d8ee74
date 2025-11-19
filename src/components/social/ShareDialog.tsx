@@ -321,7 +321,7 @@ export const ShareDialog = ({
           user_id: profile.id,
           contenido: sharedPostData,
           imagenes: postImages || [],
-          tipo: 'shared_post',
+          tipo: postImages && postImages.length > 0 ? 'imagen' : 'texto',
           compartido_en_mensajes: compartirEnMensajes,
           compartido_en_social: compartirEnSocial,
           visibilidad: statusVisibilidad,
