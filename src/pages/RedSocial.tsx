@@ -26,7 +26,7 @@ const RedSocial = () => {
   const location = useLocation();
   const { mutedUserIds, muteUser, unmuteUser, isUserMuted } = useMutedUsers();
   const { posts, loading, createPost, toggleLike, refreshPosts, updatePostComments, updatePostShares, registerView, deletePost, updatePost, toggleSavePost, repostPost } = useSocialFeed(mutedUserIds);
-  const { estados, misEstados, loading: loadingEstados, createEstado, registerView: registerStatusView, deleteEstado, addReaction, removeReaction } = useEstados('social');
+  const { estados, misEstados, loading: loadingEstados, createEstado, registerView: registerStatusView, deleteEstado, addReaction, removeReaction, refetch: refetchEstados } = useEstados('social');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
   const [detailPostIndex, setDetailPostIndex] = useState<number | null>(null);
@@ -125,6 +125,7 @@ const RedSocial = () => {
       const tipo = images && images.length > 0 ? 'imagen' : 'texto';
       await createEstado(content, images || [], tipo, false, true, 'todos');
       await updatePostShares(postId, 1);
+      await refetchEstados(); // Refrescar estados después de compartir
     } catch (error) {
       console.error("Error sharing as status:", error);
     }
@@ -315,6 +316,7 @@ const RedSocial = () => {
                       onDetailModalOpen={handleDetailModalOpen}
                       onRepost={repostPost}
                       onShareAsStatus={handleShareAsStatus}
+                      onRefreshStates={refetchEstados}
                     />
                   ))}
                 </div>

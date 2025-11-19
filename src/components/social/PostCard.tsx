@@ -61,9 +61,10 @@ interface PostCardProps {
   onDetailModalOpen?: (postId: string) => void;
   onRepost?: (originalPostId: string, comment: string) => Promise<void>;
   onShareAsStatus?: (postId: string, content: string, images?: string[]) => Promise<void>;
+  onRefreshStates?: () => void;
 }
 
-export const PostCard = ({ post, onToggleLike, onCommentCountChange, onShareCountChange, onView, onHashtagClick, onDelete, onUpdate, onToggleSave, onMuteUser, onUnmuteUser, isUserMuted, onDetailModalOpen, onRepost, onShareAsStatus }: PostCardProps) => {
+export const PostCard = ({ post, onToggleLike, onCommentCountChange, onShareCountChange, onView, onHashtagClick, onDelete, onUpdate, onToggleSave, onMuteUser, onUnmuteUser, isUserMuted, onDetailModalOpen, onRepost, onShareAsStatus, onRefreshStates }: PostCardProps) => {
   const { profile } = useAuth();
   const [showComments, setShowComments] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -282,6 +283,7 @@ export const PostCard = ({ post, onToggleLike, onCommentCountChange, onShareCoun
       postAuthor={post.repost_of ? post.originalPost?.author : post.author}
       postTimestamp={post.repost_of ? (post.originalPost?.timestamp || post.timestamp) : post.timestamp}
       onShareComplete={() => onShareCountChange?.(post.repost_of || post.id, 1)}
+      onRefreshStates={onRefreshStates}
       onRepost={
         onRepost && !post.repost_of
           ? async (comment: string) => {
