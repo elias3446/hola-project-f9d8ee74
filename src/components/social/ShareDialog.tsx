@@ -50,6 +50,7 @@ interface ShareDialogProps {
   onShareComplete?: () => void;
   onRepost?: (comment: string) => Promise<void>;
   onShareAsStatus?: () => Promise<void>;
+  onRefreshStates?: () => void;
 }
 
 interface User {
@@ -70,6 +71,7 @@ export const ShareDialog = ({
   onShareComplete,
   onRepost,
   onShareAsStatus,
+  onRefreshStates,
 }: ShareDialogProps) => {
   const { user, profile } = useAuth();
   const [copied, setCopied] = useState(false);
@@ -331,6 +333,10 @@ export const ShareDialog = ({
 
       toast.success("Publicación compartida como estado");
       await registerShare("estado");
+      
+      // Refrescar estados si el callback está disponible
+      onRefreshStates?.();
+      
       onOpenChange(false);
     } catch (error) {
       console.error("Error sharing as status:", error);
