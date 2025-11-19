@@ -305,14 +305,23 @@ export const ShareDialog = ({
     try {
       setSharingAsStatus(true);
       
-      // Crear el estado con el contenido de la publicación y las opciones seleccionadas
+      // Guardar metadata del post compartido en formato JSON para que StatusView pueda renderizarlo correctamente
+      const sharedPostData = JSON.stringify({
+        __shared_post__: true,
+        postId: postId,
+        author: postAuthor,
+        content: postContent,
+        images: postImages || [],
+        timestamp: postTimestamp?.toISOString() || new Date().toISOString(),
+      });
+
       const { error } = await supabase
         .from("estados")
         .insert({
           user_id: profile.id,
-          contenido: `📤 Publicación compartida:\n\n${postContent}`,
+          contenido: sharedPostData,
           imagenes: postImages || [],
-          tipo: postImages && postImages.length > 0 ? 'imagen' : 'texto',
+          tipo: 'shared_post',
           compartido_en_mensajes: compartirEnMensajes,
           compartido_en_social: compartirEnSocial,
           visibilidad: statusVisibilidad,
