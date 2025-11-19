@@ -3,7 +3,8 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { ChevronLeft, ChevronRight, X, Eye, Trash2, Pause, Play, Heart, Smile } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ChevronLeft, ChevronRight, X, Eye, Trash2, Pause, Play, Heart, Smile, Repeat2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { Estado } from "@/hooks/useEstados";
@@ -212,27 +213,96 @@ export const StatusView = ({
             className="relative bg-black w-full flex-1 flex items-center justify-center overflow-hidden"
             onClick={handlePause}
           >
-            {currentEstado.imagenes && currentEstado.imagenes.length > 0 ? (
-              <img
-                src={currentEstado.imagenes[0]}
-                alt="Estado"
-                className="w-full h-full object-contain"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center p-8">
-                <p className="text-white text-xl text-center break-words">
-                  {currentEstado.contenido}
-                </p>
-              </div>
-            )}
+            {(() => {
+              // Detectar si es un post compartido
+              let sharedPostData = null;
+              try {
+                if (currentEstado.contenido?.startsWith('{') && currentEstado.contenido?.includes('__shared_post__')) {
+                  sharedPostData = JSON.parse(currentEstado.contenido);
+                }
+              } catch (e) {
+                // No es un post compartido, continuar normalmente
+              }
 
-            {currentEstado.contenido && currentEstado.imagenes?.length > 0 && (
-              <div className="absolute left-0 right-0 bottom-24 p-3 sm:p-4 bg-gradient-to-t from-black/80 via-black/60 to-transparent pointer-events-none">
-                <p className="text-white text-sm break-words">
-                  {currentEstado.contenido}
-                </p>
-              </div>
-            )}
+              if (sharedPostData) {
+                // Renderizar post compartido como tarjeta
+                return (
+                  <div className="w-full h-full flex items-center justify-center p-4 sm:p-8">
+                    <div className="max-w-md w-full bg-card/95 backdrop-blur-sm rounded-xl border border-border overflow-hidden shadow-xl">
+                      <div className="p-3 bg-muted/30 border-b border-border">
+                        <div className="flex gap-2 items-center text-xs text-muted-foreground">
+                          <Repeat2 className="h-3 w-3" />
+                          <span>Publicación compartida</span>
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        {sharedPostData.author && (
+                          <div className="flex gap-3 mb-3">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={sharedPostData.author.avatar || undefined} />
+                              <AvatarFallback>
+                                {sharedPostData.author.name
+                                  .split(" ")
+                                  .map((n: string) => n[0])
+                                  .join("")
+                                  .toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-sm">{sharedPostData.author.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                @{sharedPostData.author.username}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {sharedPostData.content && (
+                          <p className="text-sm mb-3 whitespace-pre-wrap break-words">
+                            {sharedPostData.content}
+                          </p>
+                        )}
+                        
+                        {sharedPostData.images && sharedPostData.images.length > 0 && (
+                          <div className="rounded-lg overflow-hidden">
+                            <img 
+                              src={sharedPostData.images[0]} 
+                              alt="Contenido compartido" 
+                              className="w-full object-cover max-h-64"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              } else if (currentEstado.imagenes && currentEstado.imagenes.length > 0) {
+                return (
+                  <>
+                    <img
+                      src={currentEstado.imagenes[0]}
+                      alt="Estado"
+                      className="w-full h-full object-contain"
+                    />
+                    {currentEstado.contenido && (
+                      <div className="absolute left-0 right-0 bottom-24 p-3 sm:p-4 bg-gradient-to-t from-black/80 via-black/60 to-transparent pointer-events-none">
+                        <p className="text-white text-sm break-words">
+                          {currentEstado.contenido}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                );
+              } else {
+                return (
+                  <div className="w-full h-full flex items-center justify-center p-8">
+                    <p className="text-white text-xl text-center break-words">
+                      {currentEstado.contenido}
+                    </p>
+                  </div>
+                );
+              }
+            })()}
 
             {/* Botón de pausa central */}
             {showPauseIcon && (
