@@ -11,6 +11,7 @@ import { useUserSuggestionsReal } from "@/hooks/useUserSuggestionsReal";
 import { useFollowUser } from "@/hooks/useFollowUser";
 import { PostDetailModal } from "./PostDetailModal";
 import { AdvancedHashtagSearch, SearchCriteria } from "./AdvancedHashtagSearch";
+import { UserSearchBar } from "./UserSearchBar";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -125,6 +126,9 @@ export const SocialSidebar = ({
 
   return (
     <div className="space-y-4">
+      {/* User Search */}
+      <UserSearchBar />
+
       {/* Advanced Search */}
       {onAdvancedSearch && onClearAdvancedSearch && (
         <AdvancedHashtagSearch 
