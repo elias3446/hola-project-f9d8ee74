@@ -27,7 +27,7 @@ export const UserSearchBar = () => {
   }, []);
 
   const handleUserClick = (username: string) => {
-    navigate(`/perfil/${username}`);
+    navigate(`/usuario/${username}`);
     setSearchTerm("");
     setIsOpen(false);
   };
