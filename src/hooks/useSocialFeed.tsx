@@ -601,11 +601,17 @@ export const useSocialFeed = (mutedUserIds: string[] = []) => {
 
   const updatePostShares = (postId: string, increment: number) => {
     setPosts((currentPosts) =>
-      currentPosts.map((post) =>
-        post.id === postId
-          ? { ...post, shares: post.shares + increment }
-          : post
-      )
+      currentPosts.map((post) => {
+        // Update if this is the post itself
+        if (post.id === postId) {
+          return { ...post, shares: post.shares + increment };
+        }
+        // Also update if this is a repost of the shared post
+        if (post.repost_of === postId) {
+          return { ...post, shares: post.shares + increment };
+        }
+        return post;
+      })
     );
   };
 
