@@ -290,6 +290,7 @@ export const ShareDialog = ({
     setReposting(true);
     try {
       await onRepost(repostComment);
+      await registerShare("repost");
       toast.success("Publicación compartida en tu perfil");
       setRepostComment("");
       onOpenChange(false);
