@@ -30,6 +30,18 @@ interface PostDetailModalProps {
     views: number;
     shares: number;
     isLiked?: boolean;
+    repost_of?: string | null;
+    repost_comentario?: string | null;
+    originalPost?: {
+      author: {
+        name: string;
+        avatar: string | null;
+        username: string;
+      };
+      content: string;
+      timestamp: Date;
+      image?: string;
+    } | null;
   };
   onToggleLike?: (postId: string) => void;
   onCommentCountChange?: (postId: string, increment: number) => void;
@@ -116,9 +128,10 @@ export const PostDetailModal = ({
   };
 
   const handleShare = () => {
+    const targetPostId = post.repost_of || post.id;
     setSharesCount((prev) => prev + 1);
     if (onShareCountChange) {
-      onShareCountChange(post.id, 1);
+      onShareCountChange(targetPostId, 1);
     }
   };
 
@@ -305,16 +318,25 @@ export const PostDetailModal = ({
       <ShareDialog
         open={showShareDialog}
         onOpenChange={setShowShareDialog}
-        postId={post.id}
-        postContent={post.content}
-        postImages={post.image ? [post.image] : undefined}
-        postAuthor={post.author}
-        postTimestamp={post.timestamp}
+        postId={post.repost_of || post.id}
+        postContent={post.repost_of ? (post.originalPost?.content || post.content) : post.content}
+        postImages={post.repost_of ? (post.originalPost?.image ? [post.originalPost.image] : undefined) : (post.image ? [post.image] : undefined)}
+        postAuthor={post.repost_of ? post.originalPost?.author : post.author}
+        postTimestamp={post.repost_of ? (post.originalPost?.timestamp || post.timestamp) : post.timestamp}
         onShareComplete={handleShare}
         onShareAsStatus={
           onShareAsStatus
             ? async () => {
-                await onShareAsStatus(post.id, post.content, post.image ? [post.image] : undefined);
+                const targetPostId = post.repost_of || post.id;
+                const content = post.repost_of ? (post.originalPost?.content || post.content) : post.content;
+                const images = post.repost_of
+                  ? post.originalPost?.image
+                    ? [post.originalPost.image]
+                    : undefined
+                  : post.image
+                  ? [post.image]
+                  : undefined;
+                await onShareAsStatus(targetPostId, content, images);
               }
             : undefined
         }

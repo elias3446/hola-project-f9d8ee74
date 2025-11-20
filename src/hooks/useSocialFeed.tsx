@@ -149,7 +149,7 @@ export const useSocialFeed = (mutedUserIds: string[] = []) => {
           const { count: sharesCount } = await supabase
             .from("publicacion_compartidos")
             .select("*", { count: "exact", head: true })
-            .eq("publicacion_id", post.id);
+             .eq("publicacion_id", post.repost_of || post.id);
 
           // Check if current user liked this post
           const { data: userLike } = currentProfileId
